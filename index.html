@@ -489,7 +489,7 @@ function buildRegionSummary(ctyKey, containerId){
   const aprCls=ap8[N]>=0?'pos':'neg';
   const aprColor=ap8[N]>=0?'#10b981':'#ef4444';
   const roasCls=ro8[N]>=1.2?'pos':ro8[N]>=0.8?'warn':'neg';
-  const roasColor=ro8[N]>=1.2?'#10b981':ro8[N]>=0.8?'#f97316':'#ef4444';
+  const roasColorVal=ro8[N]>=1.2?'#10b981':ro8[N]>=0.8?'#f97316':'#ef4444';
   const wkRow='<div class="wk-dates">'+WEEKS_SHORT.map(w=>'<span>'+w+'</span>').join('')+'</div>';
   document.getElementById(containerId).innerHTML=
     '<div class="region-strip">'+
@@ -509,7 +509,7 @@ function buildRegionSummary(ctyKey, containerId){
       '</div>'+
       '<div class="region-card">'+
         '<div class="rc-label">ROAS</div>'+
-        '<div class="rc-val" style="color:'+roasColor+'">'+ro8[N].toFixed(2)+'x</div>'+
+        '<div class="rc-val" style="color:'+roasColorVal+'">'+ro8[N].toFixed(2)+'x</div>'+
         wowRoas(ro8[N],ro8[N-1])+
         '<div class="rc-spark rc-label" style="margin-top:6px">'+wkRow+'</div>'+
         '<div class="rc-spark">'+standardSpark(ro8,roasColor)+'</div>'+
