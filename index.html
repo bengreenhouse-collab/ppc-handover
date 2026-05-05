@@ -105,10 +105,7 @@ td{padding:7px 8px;vertical-align:middle}
 <div class="summary-bar">
   <div class="stat-pill"><span class="num" id="t-neg" style="color:#ef4444">—</span><span class="lbl">APR Neg</span></div>
   <div class="stat-pill"><span class="num" id="t-pos" style="color:#10b981">—</span><span class="lbl">ROAS ≥1.2</span></div>
-  <div class="stat-pill"><span class="num" id="t-pause" style="color:#ef4444">—</span><span class="lbl">Pause</span></div>
-  <div class="stat-pill"><span class="num" id="t-drop" style="color:#f97316">—</span><span class="lbl">Drop Budget</span></div>
-  <div class="stat-pill"><span class="num" id="t-scale" style="color:#10b981">—</span><span class="lbl">Scale Up</span></div>
-  <div style="margin-left:auto;font-size:11px;color:#334155;align-self:center">Facebook only · active this week · sorted by worst APR</div>
+<div style="margin-left:auto;font-size:11px;color:#334155;align-self:center">Facebook only · active this week · sorted by worst APR</div>
 </div>
 <div class="tabs">
   <div class="tab active" onclick="switchTab('uk',this)">🇬🇧 UK</div>
@@ -452,13 +449,9 @@ function init(){
 
   document.getElementById('t-neg').textContent=APR_NEG.length;
   document.getElementById('t-pos').textContent=ROAS_POS.length;
-  document.getElementById('t-pause').textContent=APR_NEG.filter(d=>d.rec==='PAUSE').length;
-  document.getElementById('t-drop').textContent=APR_NEG.filter(d=>d.rec&&d.rec.startsWith('DROP')).length;
-  document.getElementById('t-scale').textContent=ROAS_POS.filter(d=>d.rec==='SCALE UP').length;
-
-  const topScale=sortedPos.filter(d=>d.rec==='SCALE UP').slice(0,8);
+  const topScale=ROAS_POS.slice(0,8);
   document.getElementById('top-scale-list').innerHTML=topScale
-    .map(d=>'<li>'+shortAg(d.ag)+' — ROAS '+d.roas+'x, APR +£'+d.apr.toLocaleString()+'</li>').join('');
+    .map(d=>'<li>'+shortAg(d.ag)+' — ROAS '+d.roas+'x, APR +£'+Math.round(d.apr).toLocaleString()+'</li>').join('');
 }
 
 
