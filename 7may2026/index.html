@@ -616,26 +616,29 @@ function buildCatTable(ctyKeyword, containerId, countId){
     const sortedAds = [...catAds].sort((a,b) => b.apr - a.apr);
     const adSubRows = sortedAds.length ? sortedAds.map(a => {
       const aR = parseFloat(a.roas);
+      const aRev = Math.round(a.spend * aR);
       const aCpl = arr8(a.cpls8)[7], aRpb = arr8(a.rpbs8)[7];
       return '<tr style="border-bottom:1px solid rgba(255,255,255,.04)">'+
         '<td style="padding:4px 8px;color:#cbd5e1;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+a.ag+'">'+shortAg(a.ag)+'</td>'+
         '<td style="padding:4px 8px;text-align:right;color:#64748b;white-space:nowrap">'+extractStyle(a.ag)+'</td>'+
         '<td style="padding:4px 8px;text-align:right;color:#60a5fa">£'+Math.round(a.spend).toLocaleString()+'</td>'+
+        '<td style="padding:4px 8px;text-align:right;color:#47BF9C">£'+aRev.toLocaleString()+'</td>'+
         '<td class="n '+(aR>=1.2?'pos':aR>=0.8?'warn':'neg')+'" style="padding:4px 8px;text-align:right">'+aR.toFixed(2)+'x</td>'+
         '<td class="n '+(a.apr>=0?'pos':'neg')+'" style="padding:4px 8px;text-align:right">'+(a.apr>=0?'+':'-')+'£'+Math.round(Math.abs(a.apr)).toLocaleString()+'</td>'+
         '<td style="padding:4px 8px;text-align:right;color:#94a3b8">'+(aCpl>0?'£'+aCpl.toFixed(1):'—')+'</td>'+
         '<td style="padding:4px 8px;text-align:right;color:#a78bfa">'+(aRpb>0?'£'+aRpb.toFixed(1):'—')+'</td>'+
       '</tr>';
-    }).join('') : '<tr><td colspan="7" style="padding:6px 8px;color:#475569;font-style:italic">No adsets in APR Neg / ROAS+ lists for this category</td></tr>';
+    }).join('') : '<tr><td colspan="8" style="padding:6px 8px;color:#475569;font-style:italic">No adsets in APR Neg / ROAS+ lists for this category</td></tr>';
 
     const adSubTable =
       '<tr class="cat-adset" data-parent="'+gid+'" style="display:none">'+
-        '<td colspan="8" style="padding:2px 0 8px 24px;background:rgba(0,0,0,.15)">'+
+        '<td colspan="9" style="padding:2px 0 8px 24px;background:rgba(0,0,0,.15)">'+
           '<table style="width:100%;border-collapse:collapse;font-size:11px">'+
             '<thead><tr style="background:rgba(255,255,255,.03)">'+
               '<th style="padding:5px 8px;text-align:left;color:#64748b;font-weight:600;border-bottom:1px solid rgba(255,255,255,.06)">Adset</th>'+
               '<th style="padding:5px 8px;text-align:right;color:#64748b;font-weight:600;border-bottom:1px solid rgba(255,255,255,.06)">Style</th>'+
               '<th style="padding:5px 8px;text-align:right;color:#64748b;font-weight:600;border-bottom:1px solid rgba(255,255,255,.06)">Spend</th>'+
+              '<th style="padding:5px 8px;text-align:right;color:#64748b;font-weight:600;border-bottom:1px solid rgba(255,255,255,.06)">Revenue</th>'+
               '<th style="padding:5px 8px;text-align:right;color:#64748b;font-weight:600;border-bottom:1px solid rgba(255,255,255,.06)">ROAS</th>'+
               '<th style="padding:5px 8px;text-align:right;color:#64748b;font-weight:600;border-bottom:1px solid rgba(255,255,255,.06)">APR</th>'+
               '<th style="padding:5px 8px;text-align:right;color:#64748b;font-weight:600;border-bottom:1px solid rgba(255,255,255,.06)">CPL</th>'+
