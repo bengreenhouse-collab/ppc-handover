@@ -618,8 +618,14 @@ function buildCatTable(ctyKeyword, containerId, countId){
       const aR = parseFloat(a.roas);
       const aRev = Math.round(a.spend * aR);
       const aCpl = arr8(a.cpls8)[7], aRpb = arr8(a.rpbs8)[7];
+      const isLive = a.status ? (a.status==='ENABLED'||a.status==='ACTIVE') : arr8(a.spends8)[7]>0;
+      const statusBox = isLive
+        ? '<span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);border-radius:3px;color:#10b981;font-size:10px;font-weight:900;flex-shrink:0">✓</span>'
+        : '<span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:3px;color:#ef4444;font-size:10px;font-weight:900;flex-shrink:0">✗</span>';
       return '<tr style="border-bottom:1px solid rgba(255,255,255,.04)">'+
-        '<td style="padding:4px 8px;color:#cbd5e1;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+a.ag+'">'+shortAg(a.ag)+'</td>'+
+        '<td style="padding:4px 8px;color:#cbd5e1;max-width:230px" title="'+a.ag+'">'+
+          '<span style="display:flex;align-items:center;gap:5px">'+statusBox+'<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+shortAg(a.ag)+'</span></span>'+
+        '</td>'+
         '<td style="padding:4px 8px;text-align:right;color:#64748b;white-space:nowrap">'+extractStyle(a.ag)+'</td>'+
         '<td style="padding:4px 8px;text-align:right;color:#60a5fa">£'+Math.round(a.spend).toLocaleString()+'</td>'+
         '<td style="padding:4px 8px;text-align:right;color:#47BF9C">£'+aRev.toLocaleString()+'</td>'+
