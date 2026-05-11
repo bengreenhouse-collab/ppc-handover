@@ -223,31 +223,11 @@ td{padding:7px 8px;vertical-align:middle}
 </div>
 
 <div id="tab-flags" class="country-section">
-  <div class="section-hd" style="margin-bottom:16px"><h2>Flags &amp; Context</h2></div>
-  <div class="flag-card crit">
-    <div class="flag-title">CRITICAL: Solar Panel creative (adset 52568731969468)</div>
-    <div class="flag-body">4x House Clearance copy variants running on Solar Panel adset. Remove mis-matched copy, then reactivate.</div>
-  </div>
-  <div class="flag-card crit">
-    <div class="flag-title">CRITICAL: Wrong captions on live ads</div>
-    <div class="flag-body"><ul>
-      <li><strong>Painter &amp; Decorator</strong> — 8 ads showing /gardeners. Fix to /painters-decorators.</li>
-      <li><strong>Air Conditioning</strong> — 2 ads showing /asbestos-removal. Fix to /air-conditioning.</li>
-    </ul></div>
-  </div>
-  <div class="flag-card">
-    <div class="flag-title">Revenue attribution lag — don't panic-pause long-cycle categories</div>
-    <div class="flag-body">Revenue is attributed to click date not booking date. Week of Apr 13 will understate revenue ~20–30% for construction/reno categories. Wait 3–5 days before acting on weak ROAS in: Bathroom Install, Landscaping, Loft Conversion, Painting &amp; Decoration.</div>
-  </div>
-  <div class="flag-card">
-    <div class="flag-title">Structural response lag — apply a looser ROAS threshold here</div>
-    <div class="flag-body"><ul>
-      <li><strong>High lag</strong>: Personal Trainers, Wedding Photography, Event &amp; Party Planners, Residential Interior Design</li>
-      <li><strong>Drift lag</strong>: Painting &amp; Decoration, Bathroom Install, Home &amp; Domiciliary Care</li>
-    </ul></div>
-  </div>
-  <div class="flag-card info">
-    <div class="flag-title">Top scale priorities — safe to increase budget 20–30%</div>
+  <div class="section-hd" style="margin-bottom:8px"><h2>Weekly Flags</h2></div>
+  <div style="color:#64748b;font-size:11px;margin-bottom:16px">Auto-generated each week from the data. No repeats across reports.</div>
+  <div id="auto-flags"></div>
+  <div class="flag-card info" style="margin-top:16px">
+    <div class="flag-title">Top scale priorities — best ROAS this week</div>
     <div class="flag-body"><ul id="top-scale-list"></ul></div>
   </div>
   <div class="flag-card info">
@@ -567,6 +547,71 @@ function buildTable(items, tableId, defaultCol, defaultDir){
   renderTable(tableId);
 }
 
+
+function buildFlagsTab(){
+  const el=document.getElementById('auto-flags');
+  if(!el) return;
+  // Categories with bad latest-week APR but historically strong (last 3 months proxy = first 7 of 8 weeks)
+  const flagged=[];
+  CAT_DATA.forEach(d=>{
+    const aprs=arr8(d.aprs8), spends=arr8(d.spends8), revs=arr8(d.revs8), roass=arr8(d.roas8);
+    const histAprs=aprs.slice(0,7).filter((_,i)=>spends[i]>0);
+    if(histAprs.length<3) return;
+    const histAvgApr=histAprs.reduce((a,b)=>a+b,0)/histAprs.length;
+    const latestApr=aprs[7];
+    const latestSpend=spends[7];
+    const latestRev=revs[7];
+    const latestRoas=roass[7];
+    if(latestSpend<100) return;
+    if(histAvgApr<300) return;            // only categories that have been very profitable historically
+    if(latestApr>=histAvgApr*0.3) return; // need big drop (≥70% APR decline vs history)
+    const histSpends=spends.slice(0,7).filter(v=>v>0);
+    const histRevs=revs.slice(0,7).filter((_,i)=>spends.slice(0,7)[i]>0);
+    const histAvgSpend=histSpends.reduce((a,b)=>a+b,0)/histSpends.length;
+    const histAvgRev=histRevs.reduce((a,b)=>a+b,0)/histRevs.length;
+    const histAvgRoas=histAvgSpend>0?histAvgRev/histAvgSpend:0;
+    const spendDelta=latestSpend-histAvgSpend;
+    const revDelta=latestRev-histAvgRev;
+    const roasDelta=latestRoas-histAvgRoas;
+    // Identify dominant problem
+    let problem='';
+    if(roasDelta<-0.2){
+      problem='ROAS collapsed: '+histAvgRoas.toFixed(2)+'x → '+latestRoas.toFixed(2)+'x ('+(roasDelta>=0?'+':'')+roasDelta.toFixed(2)+'x)';
+    } else if(spendDelta>histAvgSpend*0.5 && revDelta<histAvgRev*0.1){
+      problem='Spend up '+Math.round((spendDelta/histAvgSpend)*100)+'% but revenue flat ('+(revDelta>=0?'+':'')+'£'+Math.round(revDelta).toLocaleString()+')';
+    } else if(revDelta<-histAvgRev*0.4){
+      problem='Revenue dropped '+Math.round((revDelta/histAvgRev)*100)+'% vs 8wk avg';
+    } else {
+      problem='APR collapse: avg £'+Math.round(histAvgApr).toLocaleString()+' → £'+Math.round(latestApr).toLocaleString();
+    }
+    flagged.push({cat:d.cat,cty:d.cty,histAvgApr,latestApr,latestRoas,histAvgRoas,problem,severity:histAvgApr-latestApr});
+  });
+  flagged.sort((a,b)=>b.severity-a.severity);
+  if(!flagged.length){
+    el.innerHTML='<div class="flag-card info"><div class="flag-title">No categories flagged this week</div><div class="flag-body">All historically high-APR categories are still performing within expected range.</div></div>';
+    return;
+  }
+  const cFlag='#ef4444';
+  el.innerHTML='<div class="flag-card crit"><div class="flag-title">🚨 Historically strong categories with bad APR this week ('+flagged.length+')</div>'+
+    '<div class="flag-body"><table style="width:100%;border-collapse:collapse;font-size:12px">'+
+    '<thead><tr style="color:#94a3b8;font-size:10px;text-transform:uppercase;letter-spacing:.5px">'+
+      '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.06)">Category · Market</th>'+
+      '<th style="text-align:right;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.06)">8wk avg APR</th>'+
+      '<th style="text-align:right;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.06)">This week APR</th>'+
+      '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.06)">Problem metric</th>'+
+    '</tr></thead><tbody>'+
+    flagged.map(f=>{
+      const mk=f.cty.includes('Kingdom')?'🇬🇧':f.cty.includes('States')?'🇺🇸':f.cty.includes('Ireland')?'🇮🇪':'🇨🇦';
+      return '<tr style="border-bottom:1px solid rgba(255,255,255,.04)">'+
+        '<td style="padding:6px 8px;color:#e2e8f0">'+mk+' <strong>'+f.cat+'</strong></td>'+
+        '<td style="padding:6px 8px;text-align:right;color:#10b981">+£'+Math.round(f.histAvgApr).toLocaleString()+'</td>'+
+        '<td style="padding:6px 8px;text-align:right;color:'+cFlag+'">'+(f.latestApr>=0?'+£':'−£')+Math.round(Math.abs(f.latestApr)).toLocaleString()+'</td>'+
+        '<td style="padding:6px 8px;color:#f7bf53">'+f.problem+'</td>'+
+      '</tr>';
+    }).join('')+
+    '</tbody></table></div></div>';
+}
+
 function init(){
   const aprByCtry={uk:[],us:[],ca:[],ie:[]};
   const roasByCtry={uk:[],us:[],ca:[],ie:[]};
@@ -589,6 +634,7 @@ function init(){
 
   buildOverviewTab();
   buildGrowthTab();
+  buildFlagsTab();
   const topScale=ROAS_POS.slice(0,8);
   document.getElementById('top-scale-list').innerHTML=topScale
     .map(d=>'<li>'+shortAg(d.ag)+' — ROAS '+d.roas+'x, APR +£'+Math.round(d.apr).toLocaleString()+'</li>').join('');
