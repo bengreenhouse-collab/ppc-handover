@@ -586,8 +586,10 @@ function buildFlagsTab(){
     ].filter(c=>!isNaN(c.dev)&&isFinite(c.dev));
     candidates.sort((a,b)=>b.dev-a.dev);
     const top=candidates[0];
+    // dev is the "bad direction" magnitude (positive = problem worse)
+    const arrow=top&&top.dir==='lower'?'↓':'↑';
     const problem=top
-      ?top.metric+' '+top.dir+': '+top.hist+' → '+top.now+' ('+(top.dev>=0?'+':'')+Math.round(top.dev)+'%)'
+      ?top.metric+' '+arrow+': '+top.hist+' → '+top.now+' ('+arrow+Math.abs(Math.round(top.dev))+'%)'
       :'(metrics unavailable)';
 
     flagged.push({cat:d.cat,cty:d.cty,histAvgApr,latestApr,problem,severity:histAvgApr-latestApr});
