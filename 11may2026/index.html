@@ -1408,9 +1408,9 @@ function buildOverviewTab(){
 
   // 8-week trend — 2×2 big bar chart grid
   const trendMetrics=[
+    {lbl:'APR',          data:wkApr,  isApr:false, wowInv:false, colorFn:valueGradient},
     {lbl:'Revenue',      data:wkR,    isApr:false, wowInv:false, colorFn:valueGradient},
     {lbl:'Spend',        data:wkS,    isApr:false, wowInv:true,  colorFn:valueGradient},
-    {lbl:'APR (Rev−Sp)', data:wkApr,  isApr:false, wowInv:false, colorFn:valueGradient},
     {lbl:'ROAS',         data:wkRoas, isApr:false, wowInv:false, colorFn:valueGradient,
      fmtLatest:v=>v.toFixed(2)+'x', barFmt:v=>v.toFixed(2)},
   ];
@@ -1435,7 +1435,7 @@ function buildOverviewTab(){
     }
     return '<div style="'+cardSt+'">'+
       '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">'+
-        '<span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b">'+m.lbl+'</span>'+
+        '<span style="font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#f1f5f9">'+m.lbl+'</span>'+
         '<div>'+
           '<span style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:'+valCol+'">'+valStr+'</span>'+
           (wow!=='—'?'<span style="font-size:11px;color:'+wowCol+';margin-left:8px">'+wow+' WoW</span>':'')+
