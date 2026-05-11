@@ -1405,9 +1405,9 @@ function buildOverviewTab(){
   const trendMetrics=[
     {lbl:'APR',          data:wkApr,  isApr:false, wowInv:false, colorFn:valueGradient},
     {lbl:'Revenue',      data:wkR,    isApr:false, wowInv:false, colorFn:valueGradient},
-    {lbl:'Spend',        data:wkS,    isApr:false, wowInv:true,  colorFn:valueGradient},
     {lbl:'ROAS',         data:wkRoas, isApr:false, wowInv:false, colorFn:valueGradient,
      fmtLatest:v=>v.toFixed(2)+'x', barFmt:v=>v.toFixed(2)},
+    {lbl:'Spend',        data:wkS,    isApr:false, wowInv:true,  colorFn:valueGradient},
   ];
   const cardSt='background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px 20px;min-width:0';
   const trendCards=trendMetrics.map(m=>{
