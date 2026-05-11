@@ -424,7 +424,7 @@ document.addEventListener('change', e=>{
   const agKey=tr.dataset.agkey;
   const note=tr.querySelector('.action-note').value;
   saveAction(agKey, e.target.checked, note);
-  tr.style.opacity=e.target.checked?'0.4':'1';
+  // no-op: ticking the checkbox should not visually mute the row
 });
 document.addEventListener('input', e=>{
   if(!e.target.classList.contains('action-note')) return;
@@ -469,7 +469,7 @@ function renderTable(tableId){
     const latestAprCls=apr>=0?'pos':'neg';
     const agKey=d.ag+'|'+d.cty;
     const saved=loadActions()[agKey]||{};
-    return '<tr data-agkey="'+agKey.replace(/"/g,'&quot;')+'" '+(saved.checked?'style="opacity:0.4"':'')+'>'+
+    return '<tr data-agkey="'+agKey.replace(/"/g,'&quot;')+'">'+
       '<td style="width:230px;min-width:230px">'+
         '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">'+
           '<div style="min-width:0">'+
