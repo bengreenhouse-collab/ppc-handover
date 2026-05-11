@@ -232,14 +232,6 @@ td{padding:7px 8px;vertical-align:middle}
     <div class="flag-title">Top scale priorities — best ROAS this week</div>
     <div class="flag-body"><ul id="top-scale-list"></ul></div>
   </div>
-  <div class="flag-card info">
-    <div class="flag-title">Pending launches</div>
-    <div class="flag-body"><ul>
-      <li>UK: Awareness tests — Home &amp; Domiciliary Care, Roofing, House Cleaning, Painting &amp; Decoration</li>
-      <li>UK/US/CA: 4x Cost Cap CBO campaigns with winning ad sets</li>
-      <li>US: Growth categories · CA: Remaining templates</li>
-    </ul></div>
-  </div>
 </div>
 </div>
 
@@ -562,11 +554,13 @@ function buildFlagsTab(){
     const histIdx=[0,1,2,3,4,5,6].filter(i=>spends[i]>0);
     if(histIdx.length<3) return;
     const histAvgApr=avg(histIdx.map(i=>aprs[i]));
+    const peakApr=Math.max(...histIdx.map(i=>aprs[i]));
+    const peakIdx=histIdx.find(i=>aprs[i]===peakApr);
     const latestApr=aprs[7];
     const latestSpend=spends[7];
     if(latestSpend<100) return;
-    if(histAvgApr<300) return;             // historically very profitable
-    if(latestApr>=histAvgApr*0.3) return;  // ≥70% APR drop required
+    if(peakApr<300) return;                // peak week must be very profitable
+    if(latestApr>=peakApr*0.3) return;     // ≥70% APR drop vs peak required
 
     const histAvgSpend=avg(histIdx.map(i=>spends[i]));
     const histAvgCpl=avg(histIdx.filter(i=>cpls[i]>0).map(i=>cpls[i]));
@@ -592,7 +586,7 @@ function buildFlagsTab(){
       ?top.metric+' '+arrow+': '+top.hist+' → '+top.now+' ('+arrow+Math.abs(Math.round(top.dev))+'%)'
       :'(metrics unavailable)';
 
-    flagged.push({cat:d.cat,cty:d.cty,histAvgApr,latestApr,problem,severity:histAvgApr-latestApr});
+    flagged.push({cat:d.cat,cty:d.cty,peakApr,peakIdx,latestApr,problem,severity:peakApr-latestApr});
   });
   flagged.sort((a,b)=>b.severity-a.severity);
   if(!flagged.length){
@@ -604,15 +598,16 @@ function buildFlagsTab(){
     '<div class="flag-body"><table style="width:100%;border-collapse:collapse;font-size:12px">'+
     '<thead><tr style="color:#94a3b8;font-size:10px;text-transform:uppercase;letter-spacing:.5px">'+
       '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.06)">Category · Market</th>'+
-      '<th style="text-align:right;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.06)">8wk avg APR</th>'+
+      '<th style="text-align:right;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.06)">Peak week APR</th>'+
       '<th style="text-align:right;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.06)">This week APR</th>'+
       '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.06)">Problem metric</th>'+
     '</tr></thead><tbody>'+
     flagged.map(f=>{
       const mk=f.cty.includes('Kingdom')?'🇬🇧':f.cty.includes('States')?'🇺🇸':f.cty.includes('Ireland')?'🇮🇪':'🇨🇦';
+      const peakLbl=(WEEKS_SHORT&&WEEKS_SHORT[f.peakIdx])?WEEKS_SHORT[f.peakIdx]:'';
       return '<tr style="border-bottom:1px solid rgba(255,255,255,.04)">'+
         '<td style="padding:6px 8px;color:#e2e8f0">'+mk+' <strong>'+f.cat+'</strong></td>'+
-        '<td style="padding:6px 8px;text-align:right;color:#10b981">+£'+Math.round(f.histAvgApr).toLocaleString()+'</td>'+
+        '<td style="padding:6px 8px;text-align:right;color:#10b981">+£'+Math.round(f.peakApr).toLocaleString()+(peakLbl?' <span style="color:#475569;font-size:10px">('+peakLbl+')</span>':'')+'</td>'+
         '<td style="padding:6px 8px;text-align:right;color:'+cFlag+'">'+(f.latestApr>=0?'+£':'−£')+Math.round(Math.abs(f.latestApr)).toLocaleString()+'</td>'+
         '<td style="padding:6px 8px;color:#f7bf53">'+f.problem+'</td>'+
       '</tr>';
