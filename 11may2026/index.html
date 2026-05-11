@@ -1422,17 +1422,16 @@ function buildOverviewTab(){
     const wowDir=isNaN(wowNum)?0:wowNum>0?1:-1;
     const wowGood=m.wowInv?wowDir<0:wowDir>0;
     const wowCol=wowDir===0?'#475569':wowGood?'#10b981':'#ef4444';
-    let valStr, valCol;
+    let valStr;
     if(m.fmtLatest){
       valStr=m.fmtLatest(latest);
-      valCol=latest>=1.2?'#10b981':latest>=0.8?'#f97316':'#ef4444';
-    } else if(m.isApr){
+    } else if(m.lbl==='APR'){
       valStr=(latest>=0?'+':'')+shortPound(latest);
-      valCol=latest>=0?'#10b981':'#ef4444';
     } else {
       valStr=shortPound(latest);
-      valCol='#e2e8f0';
     }
+    // Colour = the same gradient applied to the latest week's bar
+    const valCol=valueGradient(latest, m.data);
     return '<div style="'+cardSt+'">'+
       '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">'+
         '<span style="font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#f1f5f9">'+m.lbl+'</span>'+
