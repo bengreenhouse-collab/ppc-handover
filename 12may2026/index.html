@@ -96,10 +96,10 @@ td{padding:7px 8px;vertical-align:middle}
   <div class="tab" onclick="switchTab('uk',this)">🇬🇧 UK</div>
   <div class="tab" onclick="switchTab('us',this)">🇺🇸 US</div>
   <div class="tab" onclick="switchTab('ca',this)">🇨🇦 CA</div>
+  <div class="tab" onclick="switchTab('za',this)">🇿🇦 ZA</div>
   <div class="tab" onclick="switchTab('ie',this)">🇮🇪 IE</div>
   <div class="tab" onclick="switchTab('de',this)">🇩🇪 DE</div>
   <div class="tab" onclick="switchTab('fr',this)">🇫🇷 FR</div>
-  <div class="tab" onclick="switchTab('za',this)">🇿🇦 ZA</div>
   <div class="tab" onclick="switchTab('growth',this)">🌱 Growth Cats</div>
   <div class="tab" onclick="switchTab('styles',this)">🎨 Ad Styles</div>
   <div class="tab" onclick="switchTab('flags',this)">⚑ Flags</div>
@@ -1564,7 +1564,8 @@ function buildOverviewTab(){
   const mkts=[{lbl:'🇬🇧 UK',k:'Kingdom'},{lbl:'🇺🇸 US',k:'States'},{lbl:'🇨🇦 CA',k:'Canada'},{lbl:'🇮🇪 IE',k:'Ireland'},{lbl:'🇩🇪 DE',k:'Deutschland'},{lbl:'🇫🇷 FR',k:'France'},{lbl:'🇿🇦 ZA',k:'South Africa'}];
   const cellSt='padding:14px 16px;font-size:20px;font-weight:700';
   const mktThSt='background:rgba(255,255,255,.04);color:#94a3b8;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.06)';
-  const mktRows=mkts.map(m=>{
+  // Build row data first so we can re-sort
+  window.__MKT_ROWS = mkts.map(m=>{
     const cd=CAT_DATA.filter(d=>d.cty.includes(m.k));
     const ms=cd.reduce((a,d)=>a+d.spend,0), mr=cd.reduce((a,d)=>a+d.rev,0);
     const ma=mr-ms, mroas=ms>0?mr/ms:0;
@@ -1572,28 +1573,46 @@ function buildOverviewTab(){
     const liveCt=mktAdsets.length;
     const aboveCt=mktAdsets.filter(a=>parseFloat(a.roas)>=1.2).length;
     const abovePct=liveCt>0?Math.round(aboveCt/liveCt*100):0;
-    return '<tr>'+
-      '<td style="'+cellSt+';font-size:22px;font-weight:800">'+m.lbl+'</td>'+
-      '<td class="n" style="'+cellSt+';color:#60a5fa">£'+Math.round(ms).toLocaleString()+'</td>'+
-      '<td class="n" style="'+cellSt+';color:#47BF9C">£'+Math.round(mr).toLocaleString()+'</td>'+
-      '<td class="n" style="'+cellSt+';color:'+(mroas>=1.2?'#10b981':mroas>=0.8?'#f97316':'#ef4444')+'">'+mroas.toFixed(2)+'x</td>'+
-      '<td class="n" style="'+cellSt+';color:'+(ma>=0?'#10b981':'#ef4444')+'">'+(ma>=0?'+£':'−£')+Math.round(Math.abs(ma)).toLocaleString()+'</td>'+
-      '<td class="n" style="'+cellSt+';color:#e2e8f0">'+liveCt+'</td>'+
-      '<td class="n" style="'+cellSt+';color:'+(abovePct>=50?'#10b981':abovePct>=30?'#f97316':'#ef4444')+'">'+abovePct+'%</td>'+
-    '</tr>';
-  }).join('');
-  document.getElementById('ov-mkt-tbl').innerHTML=
-    '<table style="width:100%;border-collapse:collapse;table-layout:auto">'+
-    '<thead><tr>'+
-      '<th style="'+mktThSt+';text-align:left">Market</th>'+
-      '<th style="'+mktThSt+';text-align:right">Spend</th>'+
-      '<th style="'+mktThSt+';text-align:right">Revenue</th>'+
-      '<th style="'+mktThSt+';text-align:right">ROAS</th>'+
-      '<th style="'+mktThSt+';text-align:right">APR</th>'+
-      '<th style="'+mktThSt+';text-align:right">Live adsets</th>'+
-      '<th style="'+mktThSt+';text-align:right">% ROAS ≥ 1.2x</th>'+
-    '</tr></thead>'+
-    '<tbody>'+mktRows+'</tbody></table>';
+    return {lbl:m.lbl, spend:ms, rev:mr, roas:mroas, apr:ma, live:liveCt, pct:abovePct, order:mkts.indexOf(m)};
+  });
+  window.__MKT_SORT = window.__MKT_SORT || {col:'order', dir:1};
+  window.renderMktTable = function(){
+    const s=window.__MKT_SORT;
+    const rows=[...window.__MKT_ROWS].sort((a,b)=>{
+      const av=a[s.col], bv=b[s.col];
+      return (av<bv?-1:av>bv?1:0)*s.dir;
+    });
+    const arrow=c=>s.col===c?(s.dir===-1?' ↓':' ↑'):'<span style="opacity:.25">↕</span>';
+    const th=(label,col,align)=>'<th style="'+mktThSt+';text-align:'+(align||'right')+';cursor:pointer" onclick="sortMkt(\''+col+'\')">'+label+' '+arrow(col)+'</th>';
+    const tbody=rows.map(r=>{
+      return '<tr>'+
+        '<td style="'+cellSt+';font-size:22px;font-weight:800">'+r.lbl+'</td>'+
+        '<td class="n" style="'+cellSt+';color:#60a5fa">£'+Math.round(r.spend).toLocaleString()+'</td>'+
+        '<td class="n" style="'+cellSt+';color:#47BF9C">£'+Math.round(r.rev).toLocaleString()+'</td>'+
+        '<td class="n" style="'+cellSt+';color:'+(r.roas>=1.2?'#10b981':r.roas>=0.8?'#f97316':'#ef4444')+'">'+r.roas.toFixed(2)+'x</td>'+
+        '<td class="n" style="'+cellSt+';color:'+(r.apr>=0?'#10b981':'#ef4444')+'">'+(r.apr>=0?'+£':'−£')+Math.round(Math.abs(r.apr)).toLocaleString()+'</td>'+
+        '<td class="n" style="'+cellSt+';color:#e2e8f0">'+r.live+'</td>'+
+        '<td class="n" style="'+cellSt+';color:'+(r.pct>=50?'#10b981':r.pct>=30?'#f97316':'#ef4444')+'">'+r.pct+'%</td>'+
+      '</tr>';
+    }).join('');
+    document.getElementById('ov-mkt-tbl').innerHTML=
+      '<table style="width:100%;border-collapse:collapse;table-layout:auto">'+
+      '<thead><tr>'+
+        th('Market','order','left')+
+        th('Spend','spend')+
+        th('Revenue','rev')+
+        th('ROAS','roas')+
+        th('APR','apr')+
+        th('Live adsets','live')+
+        th('% ROAS ≥ 1.2x','pct')+
+      '</tr></thead><tbody>'+tbody+'</tbody></table>';
+  };
+  window.sortMkt = function(col){
+    const s=window.__MKT_SORT;
+    if(s.col===col){ s.dir=-s.dir; } else { s.col=col; s.dir = col==='order' || col==='lbl' ? 1 : -1; }
+    window.renderMktTable();
+  };
+  window.renderMktTable();
 
   // All categories table (reuse existing buildCatTable with empty keyword = all markets)
   document.getElementById('ov-cat-ct').textContent=CAT_DATA.length+' categories';
