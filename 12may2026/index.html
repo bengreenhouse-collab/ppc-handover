@@ -1,4 +1,3 @@
-<!-- v2026-05-15T15:20:24.029988 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1593,6 +1592,8 @@ function buildOverviewTab(){
   });
   window.__MKT_SORT = window.__MKT_SORT || {col:'order', dir:1};
   window.renderMktTable = function(){
+    const el=document.getElementById('ov-mkt-tbl');
+    if(!el) return;  // Market Breakdown section was removed
     const s=window.__MKT_SORT;
     const rows=[...window.__MKT_ROWS].sort((a,b)=>{
       const av=a[s.col], bv=b[s.col];
@@ -1611,7 +1612,7 @@ function buildOverviewTab(){
         '<td class="n" style="'+cellSt+';color:'+(r.pct>=50?'#10b981':r.pct>=30?'#f97316':'#ef4444')+'">'+r.pct+'%</td>'+
       '</tr>';
     }).join('');
-    document.getElementById('ov-mkt-tbl').innerHTML=
+    el.innerHTML=
       '<table style="width:100%;border-collapse:collapse;table-layout:auto">'+
       '<thead><tr>'+
         th('Market','order','left')+
