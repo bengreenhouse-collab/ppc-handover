@@ -1482,43 +1482,63 @@ function buildOverviewTab(){
 
   // WTD section (current partial week)
   const wtdMkts=[{lbl:'🇬🇧 UK',k:'Kingdom'},{lbl:'🇺🇸 US',k:'States'},{lbl:'🇨🇦 CA',k:'Canada'},{lbl:'🇮🇪 IE',k:'Ireland'},{lbl:'🇩🇪 DE',k:'Deutschland'},{lbl:'🇫🇷 FR',k:'France'},{lbl:'🇿🇦 ZA',k:'South Africa'}];
-  const wtdMktRows=wtdMkts.map(m=>{
+  // Build WTD per-market data once, then re-sort on click. Columns: APR / ROAS / Revenue / Spend
+  window.__WTD_ROWS = wtdMkts.map((m,i)=>{
     const wd=WTD_DATA.filter(d=>d.cty.includes(m.k));
-    if(!wd.length) return '';
+    if(!wd.length) return null;
     const ws=wd.reduce((a,d)=>a+d.spend,0), wr=wd.reduce((a,d)=>a+d.rev,0);
-    const wa=wr-ws, wro=ws>0?wr/ws:0;
-    return '<tr>'+
-      '<td style="padding:7px 12px;font-weight:700;font-size:12px;color:#e2e8f0">'+m.lbl+'</td>'+
-      '<td class="n" style="color:#60a5fa;padding:7px 10px">£'+Math.round(ws).toLocaleString()+'</td>'+
-      '<td class="n" style="color:#47BF9C;padding:7px 10px">£'+Math.round(wr).toLocaleString()+'</td>'+
-      '<td class="n" style="color:'+(wro>=1.2?'#10b981':wro>=0.8?'#f97316':'#ef4444')+';padding:7px 10px">'+wro.toFixed(2)+'x</td>'+
-      '<td class="n" style="color:'+(wa>=0?'#10b981':'#ef4444')+';padding:7px 10px">'+(wa>=0?'+':'−')+'£'+Math.round(Math.abs(wa)).toLocaleString()+'</td>'+
-    '</tr>';
-  }).filter(Boolean).join('');
+    return {lbl:m.lbl, spend:ws, rev:wr, roas:ws>0?wr/ws:0, apr:wr-ws, order:i};
+  }).filter(Boolean);
   const wTS=WTD_DATA.reduce((a,d)=>a+d.spend,0), wTR=WTD_DATA.reduce((a,d)=>a+d.rev,0);
   const wTA=wTR-wTS, wTRo=wTS>0?wTR/wTS:0;
-  const wtdCombRow='<tr style="background:rgba(247,191,83,.07);border-top:1px solid rgba(247,191,83,.2)">'+
-    '<td style="padding:7px 12px;font-weight:800;font-size:12px;color:#f7bf53">Combined</td>'+
-    '<td class="n" style="color:#60a5fa;font-weight:700;padding:7px 10px">£'+Math.round(wTS).toLocaleString()+'</td>'+
-    '<td class="n" style="color:#47BF9C;font-weight:700;padding:7px 10px">£'+Math.round(wTR).toLocaleString()+'</td>'+
-    '<td class="n" style="color:'+(wTRo>=1.2?'#10b981':wTRo>=0.8?'#f97316':'#ef4444')+';font-weight:700;padding:7px 10px">'+wTRo.toFixed(2)+'x</td>'+
-    '<td class="n" style="color:'+(wTA>=0?'#10b981':'#ef4444')+';font-weight:700;padding:7px 10px">'+(wTA>=0?'+':'−')+'£'+Math.round(Math.abs(wTA)).toLocaleString()+'</td>'+
-  '</tr>';
-  document.getElementById('ov-wtd').innerHTML=
-    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'+
-      '<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:#f7bf53">📅 '+WTD_LABEL+'</span>'+
-      '<span style="font-size:10px;color:#475569;font-style:italic">Partial week · Mon 4 May through Wed 7 May · spend / revenue / ROAS / APR</span>'+
-    '</div>'+
-    '<table style="border-collapse:collapse">'+
-      '<thead><tr>'+
-        '<th style="'+thSt+';text-align:left">Market</th>'+
-        '<th style="'+thSt+';text-align:right">Spend</th>'+
-        '<th style="'+thSt+';text-align:right">Revenue</th>'+
-        '<th style="'+thSt+';text-align:right">ROAS</th>'+
-        '<th style="'+thSt+';text-align:right">APR</th>'+
-      '</tr></thead>'+
-      '<tbody>'+wtdMktRows+wtdCombRow+'</tbody>'+
-    '</table>';
+  window.__WTD_SORT = window.__WTD_SORT || {col:'order', dir:1};
+  window.sortWtd = function(col){
+    const s=window.__WTD_SORT;
+    if(s.col===col){ s.dir=-s.dir; } else { s.col=col; s.dir = col==='order' ? 1 : -1; }
+    window.renderWtdTable();
+  };
+  window.renderWtdTable = function(){
+    const s=window.__WTD_SORT;
+    const rows=[...window.__WTD_ROWS].sort((a,b)=>{
+      const av=a[s.col], bv=b[s.col];
+      return (av<bv?-1:av>bv?1:0)*s.dir;
+    });
+    const arrow=c=>s.col===c?(s.dir===-1?' ↓':' ↑'):'<span style="opacity:.25">↕</span>';
+    const th=(label,col,align)=>'<th style="'+thSt+';text-align:'+(align||'right')+';cursor:pointer" onclick="sortWtd(\''+col+'\')">'+label+' '+arrow(col)+'</th>';
+    const tdSt='padding:7px 10px';
+    const tbody=rows.map(r=>{
+      return '<tr>'+
+        '<td style="padding:7px 12px;font-weight:700;font-size:12px;color:#e2e8f0">'+r.lbl+'</td>'+
+        '<td class="n" style="color:'+(r.apr>=0?'#10b981':'#ef4444')+';'+tdSt+'">'+(r.apr>=0?'+':'−')+'£'+Math.round(Math.abs(r.apr)).toLocaleString()+'</td>'+
+        '<td class="n" style="color:'+(r.roas>=1.2?'#10b981':r.roas>=0.8?'#f97316':'#ef4444')+';'+tdSt+'">'+r.roas.toFixed(2)+'x</td>'+
+        '<td class="n" style="color:#47BF9C;'+tdSt+'">£'+Math.round(r.rev).toLocaleString()+'</td>'+
+        '<td class="n" style="color:#60a5fa;'+tdSt+'">£'+Math.round(r.spend).toLocaleString()+'</td>'+
+      '</tr>';
+    }).join('');
+    const wtdCombRow='<tr style="background:rgba(247,191,83,.07);border-top:1px solid rgba(247,191,83,.2)">'+
+      '<td style="padding:7px 12px;font-weight:800;font-size:12px;color:#f7bf53">Combined</td>'+
+      '<td class="n" style="color:'+(wTA>=0?'#10b981':'#ef4444')+';font-weight:700;'+tdSt+'">'+(wTA>=0?'+':'−')+'£'+Math.round(Math.abs(wTA)).toLocaleString()+'</td>'+
+      '<td class="n" style="color:'+(wTRo>=1.2?'#10b981':wTRo>=0.8?'#f97316':'#ef4444')+';font-weight:700;'+tdSt+'">'+wTRo.toFixed(2)+'x</td>'+
+      '<td class="n" style="color:#47BF9C;font-weight:700;'+tdSt+'">£'+Math.round(wTR).toLocaleString()+'</td>'+
+      '<td class="n" style="color:#60a5fa;font-weight:700;'+tdSt+'">£'+Math.round(wTS).toLocaleString()+'</td>'+
+    '</tr>';
+    document.getElementById('ov-wtd').innerHTML=
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'+
+        '<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:#f7bf53">📅 '+WTD_LABEL+'</span>'+
+        '<span style="font-size:10px;color:#475569;font-style:italic">Complete week · click any column header to sort</span>'+
+      '</div>'+
+      '<table style="border-collapse:collapse">'+
+        '<thead><tr>'+
+          th('Market','order','left')+
+          th('APR','apr')+
+          th('ROAS','roas')+
+          th('Revenue','rev')+
+          th('Spend','spend')+
+        '</tr></thead>'+
+        '<tbody>'+tbody+wtdCombRow+'</tbody>'+
+      '</table>';
+  };
+  window.renderWtdTable();
 
   // 8-week trend — 2×2 big bar chart grid
   const trendMetrics=[
